@@ -222,6 +222,33 @@ docker exec -it php-learn php artisan make:model Post
     *   **CI 流程整合**：Checkout -> Setup PHP -> Install -> Migrate -> Test。
 *   **驗證方式**：手動執行 Action，觀察它是否成功啟動 MySQL、跑完 Migration 並通過測試。
 
+### 🚀 專業級整合：CI + Telegram 通知
+*   **檔案路徑**：`.github/workflows/main-ci.yml`
+*   **學習重點**：
+    *   **工作流整合**：將 Lint 與 Test 串聯，確保「先正確格式化，再通過測試」。
+    *   **條件執行 (`if`)**：使用 `if: success()` 或 `if: failure()` 根據結果執行不同步驟。
+    *   **Secrets 管理**：學習透過 GitHub Secrets 保護私鑰（如 Telegram Bot Token）。
+    *   **第三方 Action**：使用 `appleboy/telegram-action` 快速達成通知功能。
+*   **驗證方式**：設定好 GitHub Secrets 後，推送代碼。成功或失敗時，你的手機 Telegram 應該會立即收到推播訊息！
+
+#### 🔑 如何設定 GitHub Secrets (Telegram 通知)
+
+為了讓 GitHub Actions 能安全地發送訊息到你的 Telegram 而不外洩金鑰，請按照以下步驟設定：
+
+1.  **取得必要資訊**：
+    *   **Bot Token**：在 Telegram 搜尋 `@BotFather`，建立新機器人 (`/newbot`) 後取得 `HTTP API token`。
+    *   **Chat ID**：在 Telegram 搜尋 `@userinfobot` 並傳送訊息，取得回傳的 `Id` 數字。
+2.  **進入 GitHub 設定**：
+    *   打開你的 GitHub 儲存庫 (Repository) 網頁。
+    *   點擊上方導覽列最右邊的 **Settings**。
+3.  **新增 Secret**：
+    *   在左側選單找到 **Security** 區段，點擊 **Secrets and variables** > **Actions**。
+    *   點擊右上角的綠色按鈕 **New repository secret**。
+4.  **填入金鑰**：
+    *   **第一個**：Name 輸入 `TELEGRAM_TO`，Value 輸入你的 Chat ID。點擊 **Add secret**。
+    *   **第二個**：再次點擊 **New repository secret**，Name 輸入 `TELEGRAM_TOKEN`，Value 輸入你的 Bot Token。點擊 **Add secret**。
+5.  **完成**：現在 `main-ci.yml` 就能讀取到這些加密資訊並發送通知了。
+
 ---
 
 ## 學習建議

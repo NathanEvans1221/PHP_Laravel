@@ -1,0 +1,91 @@
+name: Laravel CI (Professional)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  laravel-ci:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: laravel_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, curl, libxml, zlib, pdo_mysql
+          coverage: none
+
+      - name: Install Dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+        working-directory: src
+
+      # 步驟 1: 檢查代碼風格 (Lint)
+      - name: Run Style Check (Pint)
+        run: ./vendor/bin/pint --test
+        working-directory: src
+
+      # 步驟 2: 準備環境與執行測試
+      - name: Prepare & Run Tests
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+          php artisan test
+        working-directory: src
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel_test
+          DB_USERNAME: root
+          DB_PASSWORD: ""
+
+      # 步驟 3: 發送 Telegram 通知 (成功)
+      - name: Notify Telegram on Success
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ ✅ ✅ CI 成功！
+            專案: ${{ github.repository }}
+            分支: ${{ github.ref_name }}
+            提交者: ${{ github.actor }}
+            訊息: ${{ github.event.head_commit.message }}
+            查看詳情: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      # 步驟 4: 發送 Telegram 通知 (失敗)
+      - name: Notify Telegram on Failure
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ❌ ❌ ❌ CI 失敗了！請儘速檢查代碼。
+            專案: ${{ github.repository }}
+            分支: ${{ github.ref_name }}
+            提交者: ${{ github.actor }}
+            查看詳情: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
