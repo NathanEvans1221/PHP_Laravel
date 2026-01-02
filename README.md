@@ -41,25 +41,45 @@ Windows 11 + WSL2 + Docker Desktop
 
 ---
 
-## �️ 資料庫設定 (MySQL)
+## 🗄️ 資料庫管理與切換
 
-本環境已內建 MySQL 8.0。
+本環境支援 **MySQL** 與 **SQLite** 兩種模式，你可以隨時切換。
 
-1. **Laravel .env 設定**：
-   確保 `src/.env` 如下配置：
-   ```env
-   DB_CONNECTION=mysql
-   DB_HOST=db
-   DB_PORT=3306
-   DB_DATABASE=laravel
-   DB_USERNAME=laravel
-   DB_PASSWORD=secret
-   ```
+### 1. 切換資料庫 (在 `src/.env` 修改)
 
-2. **執行資料表遷移 (Migration)**：
-   ```bash
-   docker exec -it php-learn php artisan migrate
-   ```
+要切換資料庫，請編輯 `src/.env` 檔案中的 `DB_CONNECTION` 區段：
+
+#### 🔹 模式 A: MySQL (建議，模擬公司環境)
+```env
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=laravel
+DB_PASSWORD=secret
+```
+
+#### 🔹 模式 B: SQLite (輕量，不需啟動 MySQL 容器)
+```env
+DB_CONNECTION=sqlite
+# 下面四行在 SQLite 模式下可省略或註解掉
+# DB_HOST=db
+# DB_PORT=3306
+# DB_DATABASE=laravel
+# DB_USERNAME=laravel
+# DB_PASSWORD=secret
+```
+
+---
+
+### 2. 重置資料庫與重建資料 (重要)
+
+當你修改了 `.env` 設定、或想要清空所有資料並重新產生測試資料時，請執行：
+
+```bash
+# 此指令會刪除所有資料表 -> 重新建立 -> 跑初始 Seed (含 10 筆測試 User)
+docker exec -it php-learn php artisan migrate:fresh --seed
+```
 
 ---
 
@@ -76,7 +96,45 @@ Windows 11 + WSL2 + Docker Desktop
 
 ---
 
-## �🚀 偵錯方法 (Xdebug 詳解)
+## 🏗️ Laravel 資料庫開發流程 (Workflow)
+
+在 Laravel 中，我們不建議直接在 MySQL 裡寫 SQL 建立資料表，而是使用 **Migration (遷移)** 機制。
+
+### 步驟 1：建立遷移檔
+在終端機執行，這會產生一個新的檔案在 `src/database/migrations/` 下：
+```bash
+docker exec -it php-learn php artisan make:migration create_posts_table
+```
+
+### 步驟 2：定義欄位
+打開剛產生的檔案，在 `up()` 方法中定義欄位：
+```php
+public function up(): void {
+    Schema::create('posts', function (Blueprint $table) {
+        $table->id();
+        $table->string('title'); // 建立一個字串欄位
+        $table->text('content');  // 建立一個長文字欄位
+        $table->timestamps();
+    });
+}
+```
+
+### 步驟 3：執行遷移
+將定義好的內容同步到 MySQL 中：
+```bash
+docker exec -it php-learn php artisan migrate
+```
+
+### 步驟 4：建立模型 (Model)
+為了能用 PHP 操作這個表，建議建立對應的 Model：
+```bash
+docker exec -it php-learn php artisan make:model Post
+```
+之後你就可以在程式碼中使用 `Post::all()` 來讀取資料了。
+
+---
+
+## 🚀 偵錯方法 (Xdebug 詳解)
 
 本環境已經針對 Laravel 優化了偵錯設定，支援中斷點 (Breakpoint) 與變數監看。
 
@@ -122,6 +180,30 @@ Windows 11 + WSL2 + Docker Desktop
 - **路由練習**：修改 `src/routes/web.php` 練習定義 API 與網頁。
 - **語法練習**：頻繁使用 `php artisan tinker` 驗證小段程式碼。
 - **資料庫**：目前已安裝 `pdo_mysql` 擴充，如需資料庫容器可進一步擴充此環境。
+
+---
+
+## 🌐 API 練習範例
+
+本專案已建立一個簡單的 API 範例，示範如何從 MySQL 讀取資料並以 JSON 回傳。
+
+### 1. 範例路徑
+- **URL**: [http://localhost:8080/api/users](http://localhost:8080/api/users)
+- **控制器**: `src/app/Http/Controllers/Api/UserController.php`
+- **路由定義**: `src/routes/api.php`
+
+### 2. 測試方式
+- **瀏覽器**: 直接開啟上述連結。
+- **VS Code REST Client**:
+  1. 開啟專案根目錄下的 `local.http`。
+  2. 點擊 `GET http://localhost:8080/api/users` 上方的 **"Send Request"** 字樣。
+  *這是在開發 API 時最推薦的測試方式。*
+
+### 3. 如何增加測試資料
+如果你想增加更多隨機使用者資料，可以執行：
+```bash
+docker exec -it php-learn php artisan tinker --execute="App\Models\User::factory()->count(5)->create()"
+```
 
 ---
 

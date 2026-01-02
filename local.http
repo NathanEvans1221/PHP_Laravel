@@ -1,0 +1,10 @@
+### Laravel API 測試
+
+@baseUrl = http://localhost:8080
+
+### 取得所有使用者列表
+GET {{baseUrl}}/api/users
+Accept: application/json
+
+### 取得 Laravel 首頁
+GET {{baseUrl}}/
