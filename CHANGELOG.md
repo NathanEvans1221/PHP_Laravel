@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 新增關於 Laravel Validate、Seeder 以及程式碼覆蓋率 (Code Coverage) 測試流程的詳細說明於 README.md。
 - 新增 API 註冊功能 (`/api/register`)。
-- 新增關於 Laravel Validate 與 Seeder 機制的詳細流程說明於 README.md。
 - 新增 API 登入功能，使用 Laravel Sanctum 進行代幣驗證。
 - 新增 `AuthController` 處理 `login` 與 `logout` 請求。
 - 在 `User` 模型中啟用 `HasApiTokens` 以支援 API 認證。

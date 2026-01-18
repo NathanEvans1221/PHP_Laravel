@@ -366,6 +366,35 @@ docker exec php-learn ./vendor/bin/phpunit
 docker exec php-learn ./vendor/bin/phpunit --filter UserAuthTest
 ```
 
+### 📊 程式碼覆蓋率 (Code Coverage)
+本專案支援產生視覺化的程式碼覆蓋率報告，幫助你了解測試涵蓋了哪些程式碼路徑。
+
+#### 1. 前置設定 (已預設完成)
+覆蓋率分析依賴於 **Xdebug** 的 `coverage` 模式。
+需確認 `php-conf/xdebug.ini` 中的 `xdebug.mode` 包含 `coverage`：
+```ini
+xdebug.mode=debug,coverage
+```
+*註：修改此設定後需執行 `docker compose restart php` 才會生效。*
+
+#### 2. 產生報告指令
+執行以下指令後，系統會分析所有測試並產出精美的網頁版報告：
+```bash
+# 產生 HTML 格式的覆蓋率報告
+docker exec php-learn ./vendor/bin/phpunit --coverage-html coverage-report
+```
+
+#### 3. 查看報告
+產生的報告位於 `src/coverage-report/` 目錄中。
+- 請直接在瀏覽器打開以下檔案：`src/coverage-report/index.html`。
+- 你可以逐行點擊查看哪些程式碼被執行過（綠色），哪些漏掉了（紅色）。
+
+#### 4. 注意事項
+- **不提交 Git**：根據最佳實踐，`/coverage-report` 已被加入 `.gitignore`，請勿將報告檔案提交至 Git 儲存庫。
+- **效能影響**：開啟 `coverage` 模式會使測試執行速度稍微變慢，建議僅在需要分析覆蓋率時使用。
+
+---
+
 ### ⚠️ 測試注意事項與常見坑位
 - **外部依賴問題 (DNS Check)**：
   在 API 驗證中若使用了 `email:rfc,dns` 規則，在測試環境中可能會因為網路延遲或無法訪問外部 DNS 導致測試失敗或極慢。
